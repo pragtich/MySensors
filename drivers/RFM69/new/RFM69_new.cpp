@@ -1210,7 +1210,7 @@ LOCAL void RFM69_listenModeGetDurations(uint32_t &rxDuration, uint32_t &idleDura
 
 #ifdef MY_DEBUG_VERBOSE_RFM69_REGISTERS
 
-LOCAL void RFM69_readAllRegs(void)
+void RFM69_readAllRegs(void)
 {
 #ifdef RFM69_REGISTER_DETAIL
 	int16_t capVal;

@@ -614,7 +614,9 @@ LOCAL bool RFM69_listenModeSetDurations(uint32_t& rxDuration, uint32_t& idleDura
 */
 LOCAL void RFM69_listenModeGetDurations(uint32_t &rxDuration, uint32_t &idleDuration);
 
+
 #endif
+LOCAL void RFM69_readAllRegs(void);
 
 #endif
 
