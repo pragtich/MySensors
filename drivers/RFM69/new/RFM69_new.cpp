@@ -372,6 +372,15 @@ LOCAL uint8_t RFM69_recv(uint8_t* buf, const uint8_t maxBufSize)
 		RFM69.dataReceived = false;
 	}
 
+#ifdef MY_DEBUG_VERBOSE_RFM69
+       	RFM69_DEBUG(PSTR("Packet received %d long\n"), payloadLen );
+	for (int i = 0; i<payloadLen; i++) {
+	  printf("%02x" , (unsigned char*)(buf)[i]);
+	  
+	}
+	printf("\n");
+#endif
+	
 	interrupts(); // explicitly re-enable interrupts
 
 	if (RFM69_getACKRequested(controlFlags) && !RFM69_getACKReceived(controlFlags)) {
