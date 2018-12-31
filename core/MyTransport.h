@@ -210,6 +210,22 @@
 #define isValidDistance(_distance) (bool)(_distance!=DISTANCE_INVALID)	//!<  returns true if distance is valid
 #define isValidParent(_parent) (bool)(_parent != AUTO)					//!<  returns true if parent is valid
 
+// RX queue ==> shift to HAL
+#if defined(MY_RX_MESSAGE_BUFFER_FEATURE)
+//KORESH TEST
+//#if defined(MY_RADIO_RFM69)
+//#error Receive message buffering not supported for RFM69!
+//#endif
+#if defined(MY_RS485)
+#error Receive message buffering not supported for RS485!
+#endif
+#if defined(MY_RADIO_NRF5_ESB)
+#error Receive message buffering not supported for NRF5 radio! Please define MY_NRF5_RX_BUFFER_SIZE
+#endif
+#elif !defined(MY_RX_MESSAGE_BUFFER_FEATURE) && defined(MY_RX_MESSAGE_BUFFER_SIZE)
+#error Receive message buffering requires message buffering feature enabled!
+#endif
+
 /**
  * @brief Callback type
  */
