@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,6 +18,8 @@
  */
 #ifndef MyHwSAMD_h
 #define MyHwSAMD_h
+
+#include <SPI.h>
 
 #ifdef __cplusplus
 #include <Arduino.h>
@@ -70,6 +72,13 @@ void hwReadConfigBlock(void *buf, void *addr, size_t length);
 void hwWriteConfigBlock(void *buf, void *addr, size_t length);
 void hwWriteConfig(const int addr, uint8_t value);
 uint8_t hwReadConfig(const int addr);
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
+
 
 /**
  * Disable all interrupts.

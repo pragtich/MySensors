@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -18,8 +18,6 @@
  */
 
 #include "MyHwAVR.h"
-#include "avr/boot.h"
-
 
 bool hwInit(void)
 {
@@ -261,10 +259,10 @@ bool hwUniqueID(unique_id_t *uniqueID)
 	// padding
 	(void)memset(uniqueID, MY_HWID_PADDING_BYTE, sizeof(unique_id_t));
 	// no unique ID for non-PB AVR, use HW specifics for diversification
-	*((uint8_t *)uniqueID) = boot_signature_byte_get(0x00);
-	*((uint8_t *)uniqueID + 1) = boot_signature_byte_get(0x02);
-	*((uint8_t *)uniqueID + 2) = boot_signature_byte_get(0x04);
-	*((uint8_t *)uniqueID + 3) = boot_signature_byte_get(0x01); //OSCCAL
+	*((uint8_t *)uniqueID) = SIGNATURE_2;
+	*((uint8_t *)uniqueID + 1) = SIGNATURE_1;
+	*((uint8_t *)uniqueID + 2) = SIGNATURE_0;
+	*((uint8_t *)uniqueID + 3) = OSCCAL;
 #if defined(__AVR_ATmega328PB__)
 	// ATMEGA328PB specifics, has unique ID
 	for(uint8_t idx = 0; idx < 10; idx++) {
@@ -303,6 +301,7 @@ uint16_t hwCPUFrequency(void)
 	// save WDT & timer settings
 	const uint8_t WDTsave = WDTCSR;
 	const uint8_t TCCR1Asave = TCCR1A;
+	const uint8_t TCCR1Bsave = TCCR1B;
 	const uint8_t TCCR1Csave = TCCR1C;
 	// setup timer1
 	TIFR1 = 0xFF;
@@ -327,6 +326,7 @@ uint16_t hwCPUFrequency(void)
 	sei();
 	// restore timer settings
 	TCCR1A = TCCR1Asave;
+	TCCR1B = TCCR1Bsave;
 	TCCR1C = TCCR1Csave;
 	// return frequency in 1/10MHz (accuracy +- 10%)
 	return TCNT1 * 2048UL / 100000UL;
@@ -354,34 +354,4 @@ uint16_t hwFreeMem(void)
 	extern int __heap_start, *__brkval;
 	int v;
 	return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
-
-void hwDebugPrint(const char *fmt, ... )
-{
-#ifndef MY_DISABLED_SERIAL
-	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-#ifdef MY_GATEWAY_SERIAL
-	// prepend debug message to be handled correctly by controller (C_INTERNAL, I_LOG_MESSAGE)
-	snprintf_P(fmtBuffer, sizeof(fmtBuffer), PSTR("0;255;%" PRIu8 ";0;%" PRIu8 ";%" PRIu32 " "),
-	           C_INTERNAL, I_LOG_MESSAGE, hwMillis());
-	MY_DEBUGDEVICE.print(fmtBuffer);
-#else
-	// prepend timestamp
-	MY_DEBUGDEVICE.print(hwMillis());
-	MY_DEBUGDEVICE.print(F(" "));
-#endif
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-#ifdef MY_GATEWAY_SERIAL
-	// Truncate message if this is gateway node
-	fmtBuffer[sizeof(fmtBuffer) - 2] = '\n';
-	fmtBuffer[sizeof(fmtBuffer) - 1] = '\0';
-#endif
-	va_end(args);
-	MY_DEBUGDEVICE.print(fmtBuffer);
-	MY_DEBUGDEVICE.flush();
-#else
-	(void)fmt;
-#endif
 }

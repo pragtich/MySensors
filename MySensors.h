@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -40,6 +40,8 @@
 #endif
 
 #include "MyConfig.h"
+#include "core/MyHelperFunctions.cpp"
+
 #include "core/MySplashScreen.h"
 #include "core/MySensorsCore.h"
 
@@ -58,7 +60,6 @@
 #include "hal/architecture/ESP32/MyHwESP32.cpp"
 #include "hal/crypto/ESP32/MyCryptoESP32.cpp"
 #elif defined(ARDUINO_ARCH_AVR)
-#include "hal/architecture/AVR/drivers/DigitalWriteFast/digitalWriteFast.h"
 #include "hal/architecture/AVR/MyHwAVR.cpp"
 #include "hal/crypto/AVR/MyCryptoAVR.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
@@ -69,8 +70,6 @@
 #include "hal/architecture/STM32F1/MyHwSTM32F1.cpp"
 #include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(ARDUINO_ARCH_NRF5) || defined(ARDUINO_ARCH_NRF52)
-#include "drivers/NVM/VirtualPage.cpp"
-#include "drivers/NVM/NVRAM.cpp"
 #include "hal/architecture/NRF5/MyHwNRF5.cpp"
 #include "hal/crypto/generic/MyCryptoGeneric.cpp"
 #elif defined(__arm__) && defined(TEENSYDUINO)
@@ -82,6 +81,8 @@
 #else
 #error Hardware abstraction not defined (unsupported platform)
 #endif
+
+#include "hal/architecture/MyHwHAL.cpp"
 
 // commonly used macros, sometimes missing in arch definitions
 #if !defined(_BV)
@@ -170,6 +171,22 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error You must specify MY_CONTROLLER_IP_ADDRESS or MY_CONTROLLER_URL_ADDRESS for UDP
 #endif
 
+
+
+// Set MQTT defaults if not set
+
+#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
+#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
+#endif
+
+#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
+#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
+#endif
+
+#if !defined(MY_MQTT_CLIENT_ID)
+#define MY_MQTT_CLIENT_ID "mysensors-1"
+#endif
+
 #if defined(MY_GATEWAY_MQTT_CLIENT)
 #if defined(MY_SENSOR_NETWORK)
 // We assume that a gateway having a radio also should act as repeater
@@ -187,37 +204,24 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #error MY_GATEWAY_TINYGSM only works with MY_GATEWAY_MQTT_CLIENT
 #endif
 
-#if !defined(MY_MQTT_PUBLISH_TOPIC_PREFIX)
-#error You must specify a topic publish prefix MY_MQTT_PUBLISH_TOPIC_PREFIX for this MQTT client
-#endif
-
-#if !defined(MY_MQTT_SUBSCRIBE_TOPIC_PREFIX)
-#error You must specify a topic subscribe prefix MY_MQTT_SUBSCRIBE_TOPIC_PREFIX for this MQTT client
-#endif
-
-#if !defined(MY_MQTT_CLIENT_ID)
-#error You must define a unique MY_MQTT_CLIENT_ID for this MQTT client
-#endif
-
 #include "core/MyGatewayTransport.cpp"
-#include "core/MyProtocolMySensors.cpp"
+#include "core/MyProtocol.cpp"
 
 #if defined(MY_GATEWAY_TINYGSM)
 #include "drivers/TinyGSM/TinyGsmClient.h"
 #endif
 
 #if defined(MY_GATEWAY_LINUX)
-#include "drivers/Linux/EthernetClient.h"
-#include "drivers/Linux/EthernetServer.h"
-#include "drivers/Linux/IPAddress.h"
+#include "hal/architecture/Linux/drivers/core/EthernetClient.h"
+#include "hal/architecture/Linux/drivers/core/EthernetServer.h"
+#include "hal/architecture/Linux/drivers/core/IPAddress.h"
 #endif
 #include "drivers/PubSubClient/PubSubClient.cpp"
 #include "core/MyGatewayTransportMQTTClient.cpp"
 #elif defined(MY_GATEWAY_FEATURE)
 // GATEWAY - COMMON FUNCTIONS
 #include "core/MyGatewayTransport.cpp"
-
-#include "core/MyProtocolMySensors.cpp"
+#include "core/MyProtocol.cpp"
 
 // GATEWAY - CONFIGURATION
 #if defined(MY_SENSOR_NETWORK)
@@ -225,9 +229,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_REPEATER_FEATURE
 #endif
 
-#if !defined(MY_PORT)
-#error You must define MY_PORT (controller or gateway port to open)
-#endif
 #if defined(MY_GATEWAY_ESP8266) || defined(MY_GATEWAY_ESP32)
 // GATEWAY - ESP8266 / ESP32
 #include "core/MyGatewayTransportEthernet.cpp"
@@ -236,9 +237,9 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #if defined(MY_USE_UDP)
 #error UDP mode is not available for Linux
 #endif
-#include "drivers/Linux/EthernetClient.h"
-#include "drivers/Linux/EthernetServer.h"
-#include "drivers/Linux/IPAddress.h"
+#include "hal/architecture/Linux/drivers/core/EthernetClient.h"
+#include "hal/architecture/Linux/drivers/core/EthernetServer.h"
+#include "hal/architecture/Linux/drivers/core/IPAddress.h"
 #include "core/MyGatewayTransportEthernet.cpp"
 #elif defined(MY_GATEWAY_W5100)
 // GATEWAY - W5100
@@ -333,14 +334,6 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #define MY_RAM_ROUTING_TABLE_ENABLED
 #endif
 
-// SOFTSPI
-#ifdef MY_SOFTSPI
-#if defined(ARDUINO_ARCH_ESP8266)
-#error Soft SPI is not available on ESP8266
-#endif
-#include "hal/architecture/AVR/drivers/DigitalIO/DigitalIO.h"
-#endif
-
 // SOFTSERIAL
 #if defined(MY_GSM_TX) != defined(MY_GSM_RX)
 #error Both, MY_GSM_TX and MY_GSM_RX need to be defined when using SoftSerial
@@ -397,7 +390,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #undef MY_REGISTRATION_FEATURE
 #undef MY_SIGNING_FEATURE
 #undef MY_OTA_FIRMWARE_FEATURE
-#if (defined(MY_GATEWAY_FEATURE) || defined(MY_REPEATER_FEATURE))
+#if defined(MY_GATEWAY_FEATURE) || defined(MY_REPEATER_FEATURE)
 #error This node is configured as GW/repeater, MY_PASSIVE_NODE cannot be set simultaneously
 #endif
 #if (MY_NODE_ID == AUTO)
@@ -447,7 +440,7 @@ MY_DEFAULT_RX_LED_PIN in your sketch instead to enable LEDs
 #include "hal/architecture/Linux/MyMainLinuxGeneric.cpp"
 #elif defined(ARDUINO_ARCH_STM32F1)
 #include "hal/architecture/STM32F1/MyMainSTM32F1.cpp"
-#elif defined(TEENSYDUINO)
+#elif defined(__arm__) && defined(TEENSYDUINO)
 #include "hal/architecture/Teensy3/MyMainTeensy3.cpp"
 #endif
 

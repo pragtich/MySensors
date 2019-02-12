@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -768,22 +768,6 @@
 //#define MY_RFM69_ENABLE_ENCRYPTION
 
 /**
- * @def MY_RFM69_ENABLE_LISTENMODE
- * @brief Define this if you need listenmode, or skip it to save memory
- */
-//#define MY_RFM69_ENABLE_LISTENMODE
-
-#if defined(MY_RFM69_ENABLE_LISTENMODE) && !defined(MY_RFM69_DEFAULT_LISTEN_RX_US)
-// By default, receive for 256uS in listen mode and idle for ~1s
-#define MY_RFM69_DEFAULT_LISTEN_RX_US	(256)
-#endif
-
-#if defined(MY_RFM69_ENABLE_LISTENMODE) && !defined(MY_RFM69_DEFAULT_LISTEN_IDLE_US)
-// By default, receive for 256uS in listen mode and idle for ~1s
-#define  MY_RFM69_DEFAULT_LISTEN_IDLE_US (1*1000000ul)
-#endif
-
-/**
  * @def MY_RFM69_MODEM_CONFIGURATION
  * @brief %RFM69 modem configuration, default is %RFM69_FSK_BR55_5_FD50
  *
@@ -1407,7 +1391,9 @@
 * @def MY_WIFI_BSSID
 * @brief BSSID of your WiFi network
 */
-//#define MY_WIFI_BSSID "MyBSSID"
+#ifndef MY_WIFI_BSSID
+#define MY_WIFI_BSSID NULL
+#endif
 
 /**
 * @def MY_WIFI_PASSWORD
@@ -1419,7 +1405,9 @@
 * @def MY_HOSTNAME
 * @brief Hostname of your device
 */
-//#define MY_HOSTNAME "MyHostname"
+#ifndef MY_HOSTNAME
+#define MY_HOSTNAME "MYSENSORS_DEVICE"
+#endif
 
 /**
  * @def MY_PORT
@@ -2157,6 +2145,12 @@
 #define ARDUINO_ARCH_ESP8266
 
 /**
+ * @def ARDUINO_ARCH_ESP32
+ * @brief Automatically set when building for ESP32 targets
+ */
+#define ARDUINO_ARCH_ESP32
+
+/**
  * @def ARDUINO_ARCH_AVR
  * @brief Automatically set when building for AVR targets
  */
@@ -2330,7 +2324,6 @@
 #define MY_RFM69_RST_PIN
 #define MY_DEBUG_VERBOSE_RFM69
 #define MY_DEBUG_VERBOSE_RFM69_REGISTERS
-#define MY_RFM69_ENABLE_LISTENMODE
 // RFM95
 #define MY_RADIO_RFM95
 #define MY_DEBUG_VERBOSE_RFM95

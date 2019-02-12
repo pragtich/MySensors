@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -50,6 +50,7 @@
 * | | MCO | REG | NOT NEEDED																	| No registration needed (i.e. GW)
 * |!| MCO | SND | NODE NOT REG																| Node is not registered, cannot send message
 * | | MCO | PIM | NODE REG=%%d																| Registration response received, registration status (REG)
+* |!| MCO | WAI | RC=%%d																			| Recursive call detected in wait(), level (RC)
 * | | MCO | SLP | MS=%%lu,SMS=%%d,I1=%%d,M1=%%d,I2=%%d,M2=%%d	| Sleep node, time (MS), smartSleep (SMS), Int1/M1, Int2/M2
 * | | MCO | SLP | WUP=%%d																			| Node woke-up, reason/IRQ (WUP)
 * |!| MCO | SLP | NTL																					| Sleeping not possible, no time left

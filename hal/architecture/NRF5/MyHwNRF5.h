@@ -7,7 +7,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Copyright (C) 2017 Frank Holtz
  * Full contributor list:
  * https://github.com/mysensors/MySensors/graphs/contributors
@@ -51,10 +51,11 @@
 #include "hal/architecture/NRF5/drivers/nrf5_wiring_digital.c"
 #include "hal/architecture/NRF5/drivers/wdt.h"
 #include "hal/architecture/NRF5/drivers/nrf_temp.h"
-#include "drivers/NVM/NVRAM.h"
-#include "drivers/NVM/VirtualPage.h"
+#include "drivers/NVM/NVRAM.cpp"
+#include "drivers/NVM/VirtualPage.cpp"
 #include <avr/dtostrf.h>
 #include <nrf.h>
+#include <SPI.h>
 
 // mapping
 #ifndef strncpy_P
@@ -124,6 +125,13 @@ uint8_t hwReadConfig(const int addr);
 void hwRandomNumberInit(void);
 ssize_t hwGetentropy(void *__buffer, size_t __length);
 #define MY_HW_HAS_GETENTROPY
+
+// SOFTSPI
+#ifdef MY_SOFTSPI
+#error Soft SPI is not available on this architecture!
+#endif
+#define hwSPI SPI //!< hwSPI
+
 
 /**
  * Disable all interrupts.

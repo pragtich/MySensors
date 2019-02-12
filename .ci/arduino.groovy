@@ -1,11 +1,14 @@
 #!groovy
 def buildArduino(config, String buildFlags, String sketch, String key) {
-	def root              = '/opt/arduino-1.8.8/'
+	def root              = '/opt/arduino-1.8.8/'	
+	def build_path        = 'build'
+	def build_path_cmd    = ''
 	if (config.nightly_arduino_ide)
 	{
 		root = '/opt/arduino-nightly/'
+		// patch for arduino-builder 1.8.9
+		build_path_cmd    = ' -build-path '+build_path+' '
 	}
-	//def esp8266_tools     = '/opt/arduino-nightly/hardware/esp8266com/esp8266/tools'
 	def jenkins_root      = '/var/lib/jenkins/'
 	def builder           = root+'arduino-builder'
 	def standard_args     = ' -warnings=all' //-verbose=true
@@ -14,9 +17,11 @@ def buildArduino(config, String buildFlags, String sketch, String key) {
 	def jenkins_packages  = jenkins_root+'.arduino15/packages'
 	def site_specifics    = ' -hardware '+jenkins_packages+' -tools '+jenkins_packages
 	def repo_specifics    = ' -hardware hardware -libraries . '
-	def build_cmd         = builder+standard_args+builder_specifics+site_specifics+repo_specifics+buildFlags
+	def build_cmd         = builder+standard_args+builder_specifics+site_specifics+repo_specifics+build_path_cmd+buildFlags
 	sh """#!/bin/bash
 				printf "\\e[1m\\e[32mBuilding \\e[34m${sketch} \\e[0musing \\e[1m\\e[36m${build_cmd}\\e[0m\\n"
+				if [ -d ${build_path} ]; then rm -r ${build_path}; fi
+				mkdir ${build_path}
 				${build_cmd} ${sketch} 2>> compiler_${key}.log"""
 }
 
@@ -215,7 +220,7 @@ def buildSTM32F1(config, sketches, String key) {
 }
 
 def buildESP8266(config, sketches, String key) {
-	def fqbn = '-fqbn=esp8266:esp8266:generic:CpuFrequency=80,VTable=flash,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=qio,FlashSize=512K0,led=2,LwIPVariant=v2mss536,Debug=Disabled,DebugLevel=None____,FlashErase=none,UploadSpeed=115200' 
+	def fqbn = '-fqbn=esp8266:esp8266:generic:xtal=80,vt=flash,exception=disabled,ResetMethod=ck,CrystalFreq=26,FlashFreq=40,FlashMode=dout,eesz=512K,led=2,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=115200' 
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP8266 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {
@@ -255,7 +260,7 @@ def buildESP8266(config, sketches, String key) {
 }
 
 def buildESP32(config, sketches, String key) {
-	def fqbn = '-fqbn espressif:esp32:esp32:PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none -warnings=default'
+	def fqbn = '-fqbn esp32:esp32:esp32:PartitionScheme=default,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none -warnings=default'
 	config.pr.setBuildStatus(config, 'PENDING', 'Toll gate (ESP32 - '+key+')', 'Building...', '${BUILD_URL}flowGraphTable/')
 	try {
 		for (sketch = 0; sketch < sketches.size(); sketch++) {

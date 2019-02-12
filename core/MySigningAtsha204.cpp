@@ -6,7 +6,7 @@
  * network topology allowing messages to be routed to nodes.
  *
  * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2018 Sensnology AB
+ * Copyright (C) 2013-2019 Sensnology AB
  * Full contributor list: https://github.com/mysensors/MySensors/graphs/contributors
  *
  * Documentation: http://www.mysensors.org
@@ -26,6 +26,7 @@
  */
 
 #include "MySigning.h"
+#include "MyHelperFunctions.h"
 
 #ifdef MY_SIGNING_ATSHA204
 #define SIGNING_IDENTIFIER (1) //HMAC-SHA256
@@ -33,16 +34,6 @@
 #if defined(MY_DEBUG_VERBOSE_SIGNING)
 #define SIGN_DEBUG(x,...) DEBUG_OUTPUT(x, ##__VA_ARGS__)
 static char printStr[65];
-static char i2h(uint8_t i)
-{
-	uint8_t k = i & 0x0F;
-	if (k <= 9) {
-		return '0' + k;
-	} else {
-		return 'A' + k - 10;
-	}
-}
-
 static void buf2str(const uint8_t* buf, size_t sz)
 {
 	uint8_t i;
@@ -50,8 +41,8 @@ static void buf2str(const uint8_t* buf, size_t sz)
 		sz = 32; //clamp to 32 bytes
 	}
 	for (i = 0; i < sz; i++) {
-		printStr[i * 2] = i2h(buf[i] >> 4);
-		printStr[(i * 2) + 1] = i2h(buf[i]);
+		printStr[i * 2] = convertI2H(buf[i] >> 4);
+		printStr[(i * 2) + 1] = convertI2H(buf[i]);
 	}
 	printStr[sz * 2] = '\0';
 }
